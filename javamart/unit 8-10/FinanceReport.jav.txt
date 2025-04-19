@@ -1,0 +1,232 @@
+//Сафронов Дмитрий ДТН-309-0 8-10 задача
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Scanner;
+
+public class FinanceReport {
+    private Payment[] payments;
+    private String reporterName;
+    private Date reportDate;
+
+    public FinanceReport(Payment[] payments, String reporterName, Date reportDate) {
+        this.payments = deepCopyPayments(payments);
+        this.reporterName = reporterName;
+        this.reportDate = reportDate != null ? new Date(reportDate.getTime()) : new Date();
+    }
+
+    // Конструктор копирования
+    public FinanceReport(FinanceReport original) {
+        this(original.payments, original.reporterName, original.reportDate);
+    }
+
+    // Метод для глубокого копирования массива платежей
+    private Payment[] deepCopyPayments(Payment[] source) {
+        if (source == null) {
+            return new Payment[0];
+        }
+        Payment[] copy = new Payment[source.length];
+        for (int i = 0; i < source.length; i++) {
+            if (source[i] != null) {
+                copy[i] = new Payment(source[i]);
+            }
+        }
+        return copy;
+    }
+
+    @Override
+    public String toString() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(String.format("[Автор: %s, дата: %s, Платежи: [\n",
+                reporterName, dateFormat.format(reportDate)));
+
+        for (Payment payment : payments) {
+            sb.append(payment.toString()).append("\n");
+        }
+
+        sb.append("]]");
+        return sb.toString();
+    }
+
+    public double getPaymentCount() {
+        return payments.length;
+    }
+
+    public Payment getPayment(int index) {
+        if (index < 0 || index >= payments.length) {
+            throw new IndexOutOfBoundsException("Неправильный платёжный индекс: " + index);
+        }
+        return payments[index];
+    }
+
+    public void setPayment(int index, Payment payment) {
+        if (index < 0 || index >= payments.length) {
+            throw new IndexOutOfBoundsException("Неправильный платёжный индекс: " + index);
+        }
+        if (payment == null) {
+            throw new IllegalArgumentException("Платёж не может быть равен нулю");
+        }
+        payments[index] = new Payment(payment);
+    }
+
+    public String getReporterName() {
+        return reporterName;
+    }
+
+    public void setReporterName(String reporterName) {
+        this.reporterName = reporterName;
+    }
+
+    public Date getReportDate() {
+        return new Date(reportDate.getTime());
+    }
+
+    public void setReportDate(Date reportDate) {
+        this.reportDate = reportDate != null ? new Date(reportDate.getTime()) : new Date();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        FinanceReport report = null;
+        FinanceReport reportCopy = null;
+
+        System.out.println("Создание финансового отчета");
+        System.out.print("Введите ФИО составителя отчета: ");
+        String reporterName = scanner.nextLine();
+
+        System.out.print("Введите количество платежей: ");
+        int paymentCount = scanner.nextInt();
+        scanner.nextLine();
+
+        Payment[] payments = new Payment[paymentCount];
+        for (int i = 0; i < paymentCount; i++) {
+            System.out.println("\nПлатеж #" + (i + 1));
+            System.out.print("Введите описание платежа: ");
+            String description = scanner.nextLine();
+
+            System.out.print("Введите сумму платежа: ");
+            double amount = scanner.nextDouble();
+            scanner.nextLine();
+
+            payments[i] = new Payment(description, amount);
+        }
+
+        report = new FinanceReport(payments, reporterName, new Date());
+
+        while (true) {
+            System.out.println("\nМеню:");
+            System.out.println("1. Показать информацию об отчете");
+            System.out.println("2. Получить информацию о платеже");
+            System.out.println("3. Изменить платеж");
+            System.out.println("4. Создать копию отчета");
+            System.out.println("5. Показать копию отчета");
+            System.out.println("6. Выход");
+            System.out.print("Выберите действие: ");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("\nИнформация об отчете:");
+                    System.out.println("Составитель: " + report.getReporterName());
+                    System.out.println("Дата создания: " + report.getReportDate());
+                    System.out.println("Количество платежей: " + report.getPaymentCount());
+                    System.out.println(report);
+                    break;
+
+                case 2:
+                    System.out.print("Введите номер платежа (1-" + report.getPaymentCount() + "): ");
+                    int viewIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+                    try {
+                        Payment p = report.getPayment(viewIndex);
+                        System.out.println("Платеж #" + (viewIndex + 1) + ": " +
+                                p.getDescription() + " - " + p.getAmount());
+                    } catch (IndexOutOfBoundsException e) {
+                        System.out.println("Ошибка: " + e.getMessage());
+                    }
+                    break;
+
+                case 3:
+                    System.out.print("Введите номер платежа для изменения (1-" + report.getPaymentCount() + "): ");
+                    int editIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+                    try {
+                        System.out.print("Введите новое описание: ");
+                        String newDesc = scanner.nextLine();
+                        System.out.print("Введите новую сумму: ");
+                        double newAmount = scanner.nextDouble();
+                        scanner.nextLine();
+                        report.setPayment(editIndex, new Payment(newDesc, newAmount));
+                        System.out.println("Платеж успешно изменен!");
+                    } catch (Exception e) {
+                        System.out.println("Ошибка: " + e.getMessage());
+                    }
+                    break;
+
+                case 4:
+                    reportCopy = new FinanceReport(report);
+                    System.out.println("Копия отчета создана!");
+                    break;
+
+                case 5:
+                    if (reportCopy != null) {
+                        System.out.println("\nКопия отчета:");
+                        System.out.println(reportCopy);
+                    } else {
+                        System.out.println("Копия отчета не создана!");
+                    }
+                    break;
+
+                case 6:
+                    System.out.println("Выход из программы...");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Неверный выбор, попробуйте снова.");
+            }
+        }
+    }
+}
+
+class Payment {
+    private String description;
+    private double amount;
+
+    public Payment(String description, double amount) {
+        this.description = description;
+        this.amount = amount;
+    }
+
+    // Конструктор копирования
+    public Payment(Payment original) {
+        this(original.description, original.amount);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        int rubles = (int) amount;
+        int kopecks = (int) ((amount - rubles) * 100);
+        return String.format("Плательщик: %s, сумма: %d руб. %02d коп.",
+                description, rubles, kopecks);
+    }
+}
